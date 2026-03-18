@@ -1,97 +1,97 @@
+const Section = ({ title, children }) => (
+  <div className="bg-surface border border-night border-t-[rgba(255,255,255,0.07)] rounded-xl p-4 px-[18px] mb-2.5">
+    <h3 className="text-[12px] font-semibold text-dim uppercase tracking-[0.4px] mb-3.5">{title}</h3>
+    {children}
+  </div>
+);
+
+const BarRow = ({ label, pct, count, variant }) => {
+  const fill = {
+    hot:     'linear-gradient(90deg, #E8A820, #ef4444)',
+    cold:    'linear-gradient(90deg, #38bdf8, #818cf8)',
+    pension: 'linear-gradient(90deg, #E8A820, #818cf8)',
+  }[variant];
+  return (
+    <div className="flex items-center gap-2.5 mb-[7px] text-[13px]">
+      <span className="w-12 text-right text-dim text-[12px] flex-shrink-0">{label}</span>
+      <div className="flex-1 h-2 bg-surface3 rounded overflow-hidden">
+        <div className="h-full rounded transition-[width] duration-500" style={{ width: `${pct}%`, background: fill }} />
+      </div>
+      <span className="w-9 text-[11px] text-muted flex-shrink-0 tabular-nums">{count}회</span>
+    </div>
+  );
+};
+
 export default function StatsTab({ stats }) {
   if (!stats) {
-    return <p className="placeholder">번호를 생성하면 통계가 표시됩니다.</p>;
+    return <p className="text-center text-body opacity-60 py-9 text-[13px] leading-7">번호를 생성하면 통계가 표시됩니다.</p>;
   }
 
   const maxLotto = Math.max(...stats.lotto.top10.map((x) => x.count));
 
   return (
     <div>
-      <div className="stat-section">
-        <h3>🔥 로또 역대 TOP 10</h3>
+      <Section title="🔥 로또 역대 TOP 10">
         {stats.lotto.top10.map((x) => (
-          <div key={x.number} className="stat-bar-row">
-            <span className="stat-label">{x.number}번</span>
-            <div className="stat-bar">
-              <div
-                className="stat-bar-fill hot"
-                style={{ width: `${((x.count / maxLotto) * 100).toFixed(1)}%` }}
-              />
-            </div>
-            <span className="stat-count">{x.count}회</span>
-          </div>
+          <BarRow key={x.number} label={`${x.number}번`} pct={(x.count / maxLotto * 100).toFixed(1)} count={x.count} variant="hot" />
         ))}
-      </div>
+      </Section>
 
-      <div className="stat-section">
-        <h3>❄️ 가장 적게 나온 번호</h3>
-        <div className="stat-grid">
+      <Section title="❄️ 가장 적게 나온 번호">
+        <div className="grid grid-cols-2 gap-1.5">
           {stats.lotto.bottom5.map((x) => (
-            <div key={x.number} className="stat-chip">
-              <span className="num">{x.number}번</span>
-              <span className="cnt">{x.count}회</span>
+            <div key={x.number} className="flex justify-between items-center bg-surface2 px-3 py-2 rounded-lg border border-night">
+              <span className="text-gold font-bold text-[14px]">{x.number}번</span>
+              <span className="text-muted text-[11px]">{x.count}회</span>
             </div>
           ))}
         </div>
-      </div>
+      </Section>
 
-      <div className="stat-section">
-        <h3>🔴 최근 핫넘버 / 🔵 콜드넘버</h3>
-        <div className="stat-grid">
+      <Section title="🔴 핫넘버 / 🔵 콜드넘버">
+        <div className="grid grid-cols-2 gap-1.5">
           {stats.lotto.hot5.map((x) => (
-            <div key={x.number} className="stat-chip">
-              <span className="num">🔴 {x.number}번</span>
-              <span className="cnt">{x.count}회</span>
+            <div key={x.number} className="flex justify-between items-center bg-surface2 px-3 py-2 rounded-lg border border-night">
+              <span className="text-gold font-bold text-[14px]">🔴 {x.number}번</span>
+              <span className="text-muted text-[11px]">{x.count}회</span>
             </div>
           ))}
           {stats.lotto.cold5.map((x) => (
-            <div key={x.number} className="stat-chip">
-              <span className="num">🔵 {x.number}번</span>
-              <span className="cnt">{x.count}회</span>
+            <div key={x.number} className="flex justify-between items-center bg-surface2 px-3 py-2 rounded-lg border border-night">
+              <span className="text-[#38bdf8] font-bold text-[14px]">🔵 {x.number}번</span>
+              <span className="text-muted text-[11px]">{x.count}회</span>
             </div>
           ))}
         </div>
-      </div>
+      </Section>
 
-      <div className="stat-section">
-        <h3>📌 연금복권 조별 출현</h3>
+      <Section title="📌 연금복권 조별 출현">
         {stats.pension.group_freq.map((x) => (
-          <div key={x.group} className="stat-bar-row">
-            <span className="stat-label">{x.group}조</span>
-            <div className="stat-bar">
-              <div
-                className="stat-bar-fill pension"
-                style={{ width: `${((x.count / 70) * 100).toFixed(1)}%` }}
-              />
-            </div>
-            <span className="stat-count">{x.count}회</span>
-          </div>
+          <BarRow key={x.group} label={`${x.group}조`} pct={(x.count / 70 * 100).toFixed(1)} count={x.count} variant="pension" />
         ))}
-      </div>
+      </Section>
 
-      <div className="stat-section">
-        <h3>📊 연금복권 자리별 TOP 3</h3>
+      <Section title="📊 연금복권 자리별 TOP 3">
         {stats.pension.digit_stats.map((pos) => (
-          <div key={pos.position} className="stat-bar-row">
-            <span className="stat-label">{pos.position}</span>
-            <span style={{ fontSize: 13, color: 'var(--text-dim)' }}>
+          <div key={pos.position} className="flex items-center gap-2.5 mb-[7px]">
+            <span className="w-12 text-right text-dim text-[12px] flex-shrink-0">{pos.position}</span>
+            <span className="text-[13px] text-dim">
               {pos.top3.map((t) => (
-                <span key={t.digit}>
-                  <span style={{ color: 'var(--pension-ball)', fontWeight: 600 }}>{t.digit}</span>
-                  ({t.count}){' '}
+                <span key={t.digit} className="mr-2">
+                  <span className="text-[#38BDF8] font-bold">{t.digit}</span>
+                  <span className="text-muted text-[11px]">({t.count})</span>
                 </span>
               ))}
             </span>
           </div>
         ))}
-      </div>
+      </Section>
 
-      <div className="stat-section">
-        <h3>📐 로또 당첨 합계 범위 (80%)</h3>
-        <p style={{ textAlign: 'center', fontSize: 20, fontWeight: 700, color: 'var(--accent)', padding: '8px 0' }}>
+      <Section title="📐 로또 당첨 합계 범위 (80%)">
+        <p className="text-center text-[20px] font-bold text-gold py-2">
           {stats.lotto.sum_range[0]} ~ {stats.lotto.sum_range[1]}
         </p>
-      </div>
+      </Section>
     </div>
   );
 }

@@ -1,13 +1,15 @@
 # ── 1단계: React 빌드 ────────────────────────────────────────────
 FROM node:22-alpine AS frontend-builder
 
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 WORKDIR /app/frontend
 
-COPY frontend/package*.json ./
-RUN npm ci
+COPY frontend/package.json ./
+RUN pnpm install
 
 COPY frontend/ .
-RUN npm run build
+RUN pnpm run build
 
 # ── 2단계: Django 실행 ────────────────────────────────────────────
 FROM python:3.11-slim

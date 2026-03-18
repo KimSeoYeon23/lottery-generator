@@ -5,10 +5,10 @@ import StatsTab from './components/StatsTab';
 import BuyTab from './components/BuyTab';
 
 const TABS = [
-  { id: 'lotto', label: '로또 6/45' },
+  { id: 'lotto',   label: '로또 6/45' },
   { id: 'pension', label: '연금복권 720+' },
-  { id: 'stats', label: '통계' },
-  { id: 'buy', label: '구매' },
+  { id: 'stats',   label: '통계' },
+  { id: 'buy',     label: '구매' },
 ];
 
 async function fetchGenerate() {
@@ -65,23 +65,27 @@ export default function App() {
     setSelected((prev) => prev.filter((_, i) => i !== idx));
   }
 
-  function handleSyncLotto() {
-    setSelected([]);
-  }
-
   return (
-    <div className="container">
-      <header>
-        <span className="header-icon">🎱</span>
-        <h1><em>번호</em> 생성기</h1>
-        <p className="subtitle">로또 6/45 & 연금복권 720+</p>
+    <div className="max-w-[680px] mx-auto px-4 py-8">
+      <header className="text-center mb-9">
+        <span
+          className="text-4xl block mb-2.5"
+          style={{ filter: 'drop-shadow(0 0 12px rgba(232,168,32,0.5))' }}
+        >🎱</span>
+        <h1 className="text-2xl font-bold tracking-tight text-body">
+          <em className="not-italic text-gold">번호</em> 생성기
+        </h1>
+        <p className="text-dim text-[13px] mt-1 tracking-wide">로또 6/45 & 연금복권 720+</p>
       </header>
 
-      <nav className="tabs">
+      <nav
+        className="flex border-b border-night mb-6"
+        style={{ background: 'radial-gradient(ellipse 80% 40% at 50% -10%, rgba(232,168,32,0.04) 0%, transparent 70%)' }}
+      >
         {TABS.map((t) => (
           <button
             key={t.id}
-            className={`tab${activeTab === t.id ? ' active' : ''}`}
+            className={`tab-item${activeTab === t.id ? ' active' : ''}`}
             onClick={() => setActiveTab(t.id)}
           >
             {t.label}
@@ -112,11 +116,11 @@ export default function App() {
         <BuyTab
           selected={selected}
           onRemove={handleRemove}
-          onSyncLotto={handleSyncLotto}
+          onSyncLotto={() => setSelected([])}
         />
       )}
 
-      <footer>
+      <footer className="text-center pt-8 pb-4 text-muted text-[11px] leading-relaxed">
         <p>⚠️ 복권은 완전한 확률 게임입니다. 재미로만 참고하세요!</p>
       </footer>
     </div>
