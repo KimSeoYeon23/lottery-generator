@@ -1,0 +1,82 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로또 & 연금복권 번호 생성기</title>
+  <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎰 번호 생성기</h1>
+      <p class="subtitle">로또 6/45 & 연금복권 720+</p>
+    </header>
+
+    <!-- 탭 -->
+    <nav class="tabs">
+      <button class="tab active" data-tab="lotto">🎱 로또 6/45</button>
+      <button class="tab" data-tab="pension">🎫 연금복권 720+</button>
+      <button class="tab" data-tab="stats">📊 통계</button>
+      <button class="tab" data-tab="buy">🛒 구매</button>
+    </nav>
+
+    <!-- 로또 탭 -->
+    <section id="lotto" class="tab-content active">
+      <div class="generate-controls">
+        <button id="btn-generate-lotto" class="btn-primary">번호 생성</button>
+        <button id="btn-regenerate-lotto" class="btn-secondary" style="display:none">다시 생성</button>
+      </div>
+      <div id="lotto-results"></div>
+    </section>
+
+    <!-- 연금복권 탭 -->
+    <section id="pension" class="tab-content">
+      <div class="generate-controls">
+        <button id="btn-generate-pension" class="btn-primary">번호 생성</button>
+        <button id="btn-regenerate-pension" class="btn-secondary" style="display:none">다시 생성</button>
+      </div>
+      <div id="pension-results"></div>
+    </section>
+
+    <!-- 통계 탭 -->
+    <section id="stats" class="tab-content">
+      <div id="stats-content">
+        <p class="placeholder">번호를 생성하면 통계가 표시됩니다.</p>
+      </div>
+    </section>
+
+    <!-- 구매 탭 -->
+    <section id="buy" class="tab-content">
+      <div class="buy-section">
+        <div class="login-form">
+          <h3>🔐 동행복권 계정</h3>
+          <input type="text" id="dh-username" placeholder="아이디">
+          <input type="password" id="dh-password" placeholder="비밀번호">
+          <div class="login-actions">
+            <button id="btn-save-creds" class="btn-secondary">계정 저장</button>
+            <button id="btn-balance" class="btn-secondary">잔액 조회</button>
+          </div>
+          <div id="balance-result"></div>
+        </div>
+
+        <div class="buy-tickets">
+          <h3>🎯 선택된 번호</h3>
+          <div id="selected-tickets">
+            <p class="placeholder">로또 탭에서 번호를 선택하세요.</p>
+          </div>
+          <button id="btn-buy" class="btn-danger" disabled>구매하기</button>
+          <div id="buy-result"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>⚠️ 복권은 완전한 확률 게임입니다. 재미로만 참고하세요!</p>
+    </footer>
+  </div>
+
+  <script src="{% static 'script.js' %}"></script>
+</body>
+</html>
