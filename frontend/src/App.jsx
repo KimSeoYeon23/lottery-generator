@@ -5,10 +5,10 @@ import StatsTab from './components/StatsTab';
 import BuyTab from './components/BuyTab';
 
 const TABS = [
-  { id: 'lotto', label: '🎱 로또 6/45' },
-  { id: 'pension', label: '🎫 연금복권 720+' },
-  { id: 'stats', label: '📊 통계' },
-  { id: 'buy', label: '🛒 구매' },
+  { id: 'lotto', label: '로또 6/45' },
+  { id: 'pension', label: '연금복권 720+' },
+  { id: 'stats', label: '통계' },
+  { id: 'buy', label: '구매' },
 ];
 
 async function fetchGenerate() {
@@ -72,7 +72,8 @@ export default function App() {
   return (
     <div className="container">
       <header>
-        <h1>🎰 번호 생성기</h1>
+        <span className="header-icon">🎱</span>
+        <h1><em>번호</em> 생성기</h1>
         <p className="subtitle">로또 6/45 & 연금복권 720+</p>
       </header>
 

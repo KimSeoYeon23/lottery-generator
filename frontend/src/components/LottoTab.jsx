@@ -31,13 +31,16 @@ export default function LottoTab({ results, selected, onSelect, onGenerate, onRe
             >
               <div className="card-header">
                 <span className="strategy-name">{r.strategy}</span>
-                <span className="card-meta">합:{r.sum} | 홀짝 {r.odd_even}</span>
+                <span className="card-meta">합 {r.sum} · {r.odd_even}</span>
               </div>
               <div className="ball-row">
                 {r.numbers.map((n) => (
                   <NumberBall key={n} n={n} />
                 ))}
               </div>
+              {isSelected && (
+                <div className="card-select-indicator">✓</div>
+              )}
             </div>
           );
         })}

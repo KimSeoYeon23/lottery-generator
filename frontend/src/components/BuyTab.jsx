@@ -65,7 +65,7 @@ export default function BuyTab({ selected, onRemove, onSyncLotto }) {
   return (
     <div className="buy-section">
       <div className="login-form">
-        <h3>🔐 동행복권 계정</h3>
+        <p className="section-title">🔐 동행복권 계정</p>
         <input
           type="text"
           placeholder="아이디"
@@ -122,20 +122,21 @@ export default function BuyTab({ selected, onRemove, onSyncLotto }) {
       </div>
 
       <div className="buy-tickets">
-        <h3>🎯 선택된 번호</h3>
+        <p className="section-title">🎯 선택된 번호</p>
         {selected.length === 0 ? (
-          <p className="placeholder">로또 탭에서 번호를 클릭해 선택하세요. (최대 5장)</p>
+          <p className="placeholder">로또 탭에서 번호 카드를 클릭해<br/>구매할 번호를 선택하세요. (최대 5장)</p>
         ) : (
           <>
             {selected.map((s, i) => (
               <div key={i} className="selected-ticket-item">
-                <span className="nums">{s.numbers.join(', ')}</span>
-                <span className="strategy-name">{s.strategy}</span>
+                <span className="slot">{'ABCDE'[i]}</span>
+                <span className="nums">{s.numbers.join('  ')}</span>
+                <span className="strat">{s.strategy}</span>
                 <span className="remove" onClick={() => onRemove(i)}>✕</span>
               </div>
             ))}
-            <p style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 8, textAlign: 'center' }}>
-              {selected.length}장 = {(selected.length * 1000).toLocaleString()}원
+            <p className="ticket-summary">
+              {selected.length}장 · <span>{(selected.length * 1000).toLocaleString()}원</span>
             </p>
           </>
         )}
@@ -153,7 +154,7 @@ export default function BuyTab({ selected, onRemove, onSyncLotto }) {
             <div className="result-error">{buyResult.message}</div>
           ) : (
             <div className="result-success">
-              <div style={{ fontWeight: 700, marginBottom: 8 }}>구매 완료!</div>
+              <strong>구매 완료!</strong>
               <div>회차: {buyResult.data.round}회</div>
               <div>추첨일: {buyResult.data.draw_date}</div>
               {buyResult.data.tickets.map((t) => (

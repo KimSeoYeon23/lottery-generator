@@ -30,7 +30,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ .
 
 # React 빌드 결과물 (static/index.html, static/assets/)
-COPY --from=frontend-builder /app/static ./static
+COPY --from=frontend-builder /app/backend/static ./static
 
 # 비루트 사용자
 RUN useradd -m appuser && chown -R appuser /app
