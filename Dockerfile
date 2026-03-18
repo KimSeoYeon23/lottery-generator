@@ -23,11 +23,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 
 # Python 의존성
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Django 소스
-COPY . .
+COPY backend/ .
 
 # React 빌드 결과물 (static/index.html, static/assets/)
 COPY --from=frontend-builder /app/static ./static
