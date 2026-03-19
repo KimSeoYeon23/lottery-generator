@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LottoTab from './components/LottoTab';
 import PensionTab from './components/PensionTab';
 import StatsTab from './components/StatsTab';
@@ -27,6 +27,10 @@ const App = () => {
   const [stats, setStats] = useState(null);
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchGenerate(0).then((data) => setStats(data.stats));
+  }, []);
 
   const handleGenerate = async (lottoCount) => {
     setLoading(true);
