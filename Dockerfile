@@ -34,6 +34,9 @@ COPY backend/ .
 # React 빌드 결과물 (static/index.html, static/assets/)
 COPY --from=frontend-builder /app/backend/static ./static
 
+# 정적 파일 수집 (whitenoise용)
+RUN SECRET_KEY=build python manage.py collectstatic --noinput
+
 # 비루트 사용자
 RUN useradd -m appuser && chown -R appuser /app
 USER appuser
