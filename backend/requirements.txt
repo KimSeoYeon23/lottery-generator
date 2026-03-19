@@ -2,3 +2,4 @@ django
 requests
 pycryptodome
 apscheduler
+gunicorn
