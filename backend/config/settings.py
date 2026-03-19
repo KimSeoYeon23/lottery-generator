@@ -27,6 +27,7 @@ ALLOWED_HOSTS = _hosts.split(',') if _hosts else ['localhost', '127.0.0.1']
 # Application definition
 
 INSTALLED_APPS = [
+    'lottery.apps.LotteryConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

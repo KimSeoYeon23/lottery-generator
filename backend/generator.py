@@ -3,7 +3,22 @@
 import random
 from collections import Counter
 
-# 역대 통계 데이터 (공식 동행복권 기준, ~2026년 3월)
+# 파일에 저장된 최신 통계 로드 (없으면 하드코딩 폴백)
+def _load_live_stats():
+    try:
+        import fetch_stats
+        data = fetch_stats.load()
+        if data:
+            return (
+                {int(k): v for k, v in data["lotto_freq"].items()},
+                {int(k): v for k, v in data["lotto_recent_50"].items()},
+                tuple(data["lotto_sum_range"]),
+            )
+    except Exception:
+        pass
+    return None, None, None
+
+# 역대 통계 데이터 (공식 동행복권 기준, ~2026년 3월 하드코딩 폴백)
 LOTTO_FREQ = {
     1: 156, 2: 143, 3: 155, 4: 152, 5: 144, 6: 152, 7: 150, 8: 143, 9: 123,
     10: 149, 11: 146, 12: 168, 13: 166, 14: 165, 15: 152, 16: 146, 17: 163,
@@ -38,9 +53,10 @@ PENSION_DIGIT_FREQ = [
 
 class LottoGenerator:
     def __init__(self):
-        self.freq = LOTTO_FREQ
-        self.recent = LOTTO_RECENT_50
-        self.sum_range = LOTTO_SUM_RANGE
+        live_freq, live_recent, live_sum = _load_live_stats()
+        self.freq = live_freq or LOTTO_FREQ
+        self.recent = live_recent or LOTTO_RECENT_50
+        self.sum_range = live_sum or LOTTO_SUM_RANGE
         self.pool = list(range(1, 46))
 
     def _weighted_pick(self, weights, count, exclude=None):

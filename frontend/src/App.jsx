@@ -11,16 +11,16 @@ const TABS = [
   { id: 'buy',     label: '구매' },
 ];
 
-async function fetchGenerate() {
+const fetchGenerate = async (lottoCount = 5) => {
   const res = await fetch('/api/generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ lotto_count: 5, pension_count: 5 }),
+    body: JSON.stringify({ lotto_count: lottoCount, pension_count: 5 }),
   });
   return res.json();
-}
+};
 
-export default function App() {
+const App = () => {
   const [activeTab, setActiveTab] = useState('lotto');
   const [lotto, setLotto] = useState([]);
   const [pension, setPension] = useState([]);
@@ -28,30 +28,32 @@ export default function App() {
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  async function handleGenerate() {
+  const handleGenerate = async (lottoCount) => {
     setLoading(true);
-    const data = await fetchGenerate();
+    const data = await fetchGenerate(lottoCount);
     setLotto(data.lotto);
     setPension(data.pension);
     setStats(data.stats);
+    setSelected(data.lotto.slice(0, 5));
     setLoading(false);
-  }
+  };
 
-  async function handleRegenerateLotto() {
+  const handleRegenerateLotto = async (lottoCount) => {
     setLoading(true);
-    const data = await fetchGenerate();
+    const data = await fetchGenerate(lottoCount);
     setLotto(data.lotto);
+    setSelected(data.lotto.slice(0, 5));
     setLoading(false);
-  }
+  };
 
-  async function handleRegeneratePension() {
+  const handleRegeneratePension = async () => {
     setLoading(true);
     const data = await fetchGenerate();
     setPension(data.pension);
     setLoading(false);
-  }
+  };
 
-  function handleSelect(r) {
+  const handleSelect = (r) => {
     const key = JSON.stringify(r.numbers);
     const exists = selected.findIndex((s) => JSON.stringify(s.numbers) === key);
     if (exists >= 0) {
@@ -59,11 +61,11 @@ export default function App() {
     } else if (selected.length < 5) {
       setSelected((prev) => [...prev, r]);
     }
-  }
+  };
 
-  function handleRemove(idx) {
+  const handleRemove = (idx) => {
     setSelected((prev) => prev.filter((_, i) => i !== idx));
-  }
+  };
 
   return (
     <div className="max-w-[680px] mx-auto px-4 py-8">
@@ -125,4 +127,6 @@ export default function App() {
       </footer>
     </div>
   );
-}
+};
+
+export default App;

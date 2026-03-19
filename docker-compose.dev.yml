@@ -23,6 +23,7 @@ services:
       - /app/node_modules
     environment:
       - VITE_API_URL=http://backend:8000
+      - CI=true
     command: sh -c "corepack enable && corepack prepare pnpm@latest --activate && pnpm install && pnpm run dev -- --host"
     depends_on:
       - backend

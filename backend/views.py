@@ -61,9 +61,22 @@ def api_buy(request):
     tickets = body.get('tickets', [])
     username = body.get('username', '')
     password = body.get('password', '')
+    mock = body.get('mock', False)
 
     if not tickets:
         return JsonResponse({'error': '번호를 선택하세요.'}, status=400)
+
+    if mock:
+        import datetime
+        today = datetime.date.today()
+        draw = today + datetime.timedelta(days=(5 - today.weekday()) % 7)
+        first = datetime.date(2002, 12, 7)
+        rnd = 1 + (draw - first).days // 7
+        bought = [
+            {'slot': 'ABCDE'[i], 'mode': '수동', 'numbers': [str(n) for n in t]}
+            for i, t in enumerate(tickets[:5])
+        ]
+        return JsonResponse({'round': rnd, 'draw_date': str(draw), 'tickets': bought, 'mock': True})
 
     if not username or not password:
         creds = client.load_credentials()

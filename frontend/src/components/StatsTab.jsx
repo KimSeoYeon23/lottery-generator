@@ -22,7 +22,7 @@ const BarRow = ({ label, pct, count, variant }) => {
   );
 };
 
-export default function StatsTab({ stats }) {
+const StatsTab = ({ stats }) => {
   if (!stats) {
     return <p className="text-center text-body opacity-60 py-9 text-[13px] leading-7">번호를 생성하면 통계가 표시됩니다.</p>;
   }
@@ -94,4 +94,6 @@ export default function StatsTab({ stats }) {
       </Section>
     </div>
   );
-}
+};
+
+export default StatsTab;

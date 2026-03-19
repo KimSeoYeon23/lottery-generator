@@ -1,4 +1,4 @@
-export default function PensionTab({ results, onGenerate, onRegenerate, loading }) {
+const PensionTab = ({ results, onGenerate, onRegenerate, loading }) => {
   return (
     <section>
       <div className="flex gap-2 mb-4">
@@ -49,4 +49,6 @@ export default function PensionTab({ results, onGenerate, onRegenerate, loading 
       </div>
     </section>
   );
-}
+};
+
+export default PensionTab;

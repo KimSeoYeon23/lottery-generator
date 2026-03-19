@@ -10,10 +10,18 @@
   --color-surface3: #232846;
   --color-night:    #252a42;
   --color-body:     #E8EAF0;
-  --color-dim:      #7B82A0;
-  --color-muted:    #4A5070;
+  --color-dim:      #CDD2E0;
+  --color-muted:    #A8B0C8;
   --color-gold:     #E8A820;
   --color-gold-dark:#C48B10;
+}
+
+/* ── 기본 스타일 ─── */
+body {
+  background-color: #0d1120;
+  color: #E8EAF0;
+  min-height: 100vh;
+  font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
 }
 
 /* ── 볼 (radial gradient + 3D 효과) ─── */
