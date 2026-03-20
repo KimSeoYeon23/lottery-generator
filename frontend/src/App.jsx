@@ -26,6 +26,7 @@ const App = () => {
   const [pension, setPension] = useState([]);
   const [stats, setStats] = useState(null);
   const [selected, setSelected] = useState([]);
+  const [pensionSelected, setPensionSelected] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -71,6 +72,16 @@ const App = () => {
     setSelected((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  const handlePensionSelect = (r) => {
+    const key = `${r.group}-${r.numbers.join('')}`;
+    setPensionSelected((prev) => {
+      const exists = prev.findIndex((s) => `${s.group}-${s.numbers.join('')}` === key);
+      if (exists >= 0) return prev.filter((_, i) => i !== exists);
+      if (prev.length >= 1) return [r];  // 연금복권은 1개만 선택
+      return [...prev, r];
+    });
+  };
+
   return (
     <div className="max-w-[680px] mx-auto px-4 py-8">
       <header className="text-center mb-9">
@@ -112,6 +123,8 @@ const App = () => {
       {activeTab === 'pension' && (
         <PensionTab
           results={pension}
+          selected={pensionSelected}
+          onSelect={handlePensionSelect}
           onGenerate={handleGenerate}
           onRegenerate={handleRegeneratePension}
           loading={loading}
@@ -121,7 +134,9 @@ const App = () => {
       {activeTab === 'buy' && (
         <BuyTab
           selected={selected}
+          pensionSelected={pensionSelected}
           onRemove={handleRemove}
+          onPensionClear={() => setPensionSelected([])}
           onSyncLotto={() => setSelected([])}
         />
       )}

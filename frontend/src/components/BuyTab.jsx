@@ -12,14 +12,22 @@ const SectionTitle = ({ children }) => (
 
 const MAX_TOTAL = 5;
 
-const BuyTab = ({ selected, onRemove, onSyncLotto }) => {
+const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLotto }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [balanceResult, setBalanceResult] = useState(null);
   const [buyResult, setBuyResult] = useState(null);
+  const [pensionBuyResult, setPensionBuyResult] = useState(null);
   const [loading, setLoading] = useState('');
   const [quantities, setQuantities] = useState({});
   const [mockMode, setMockMode] = useState(false);
+  const [pensionGroups, setPensionGroups] = useState([]);
+
+  const toggleGroup = (g) => {
+    setPensionGroups((prev) =>
+      prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g].sort((a, b) => a - b)
+    );
+  };
 
   useEffect(() => {
     setQuantities((prev) => {
@@ -69,6 +77,27 @@ const BuyTab = ({ selected, onRemove, onSyncLotto }) => {
     } else {
       setBalanceResult({ type: 'balance', data });
     }
+  };
+
+  const handleBuyPension = async () => {
+    if (!pensionGroups.length) return;
+    const totalCost = (pensionGroups.length * 1000).toLocaleString();
+    const groupStr = pensionGroups.map((g) => `${g}조`).join(', ');
+    if (!confirm(`연금복권 ${groupStr} 자동배정 총 ${pensionGroups.length}장 (${totalCost}원)을 구매하시겠습니까?`)) return;
+    setLoading('pension');
+    try {
+      const res = await fetch('/api/buy-pension', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ groups: pensionGroups, username, password, mock: mockMode }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setPensionBuyResult({ type: 'success', results: data.results });
+    } catch (e) {
+      setPensionBuyResult({ type: 'error', message: e.message });
+    }
+    setLoading('');
   };
 
   const handleBuy = async () => {
@@ -211,6 +240,66 @@ const BuyTab = ({ selected, onRemove, onSyncLotto }) => {
           )
         )}
       </Card>
+
+      {/* 연금복권 구매 카드 — TODO: connPro.do E002 미해결, 임시 비활성화 */}
+      {false && <Card>
+        <div className="flex items-center justify-between mb-3.5">
+          <p className="text-[13px] font-semibold text-dim flex items-center gap-1.5">🎰 연금복권 720+ 구매</p>
+          <label className="flex items-center gap-1.5 cursor-pointer select-none">
+            <div
+              className={`w-8 h-[18px] rounded-full transition-colors relative ${mockMode ? 'bg-gold' : 'bg-surface3'}`}
+              onClick={() => setMockMode(m => !m)}
+            >
+              <div className={`absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full shadow transition-transform ${mockMode ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
+            </div>
+            <span className={`text-[11px] font-medium ${mockMode ? 'text-gold' : 'text-muted'}`}>테스트</span>
+          </label>
+        </div>
+        <p className="text-[11px] text-muted mb-3 leading-5">
+          구매 번호는 동행복권 서버가 별도로 배정합니다. 조만 선택하세요.
+        </p>
+
+        {/* 조 선택 */}
+        <p className="text-[11px] text-muted mb-2">구매할 조 선택 <span className="text-dim">(여러 조 동시 선택 가능)</span></p>
+        <div className="flex gap-1.5 mb-3">
+          {[1, 2, 3, 4, 5].map((g) => (
+            <button
+              key={g}
+              className={`flex-1 py-2.5 rounded-lg text-[13px] font-bold border transition-all cursor-pointer ${pensionGroups.includes(g) ? 'bg-[rgba(56,189,248,0.15)] text-[#38BDF8] border-[rgba(56,189,248,0.4)]' : 'bg-surface2 text-muted border-night hover:border-[rgba(56,189,248,0.3)] hover:text-dim'}`}
+              onClick={() => toggleGroup(g)}
+            >
+              {g}조
+            </button>
+          ))}
+        </div>
+        {pensionGroups.length > 0 && (
+          <p className="text-[12px] text-center mb-2">
+            <span className="text-[#38BDF8] font-semibold">{pensionGroups.map((g) => `${g}조`).join(' + ')}</span>
+            <span className="text-muted"> · {pensionGroups.length}장 · {(pensionGroups.length * 1000).toLocaleString()}원</span>
+          </p>
+        )}
+
+        <button
+          className={`w-full py-3 rounded-[10px] text-[14px] font-semibold border cursor-pointer transition-all disabled:opacity-30 ${mockMode ? 'bg-[rgba(232,168,32,0.12)] text-gold border-[rgba(232,168,32,0.3)]' : 'bg-[rgba(56,189,248,0.1)] text-[#38BDF8] border-[rgba(56,189,248,0.25)] hover:bg-[rgba(56,189,248,0.2)]'}${loading === 'pension' ? ' loading' : ''}`}
+          onClick={handleBuyPension}
+          disabled={loading === 'pension' || pensionGroups.length === 0}
+        >
+          {mockMode ? '테스트 구매' : '연금복권 구매'}
+          {pensionGroups.length > 1 && ` (${pensionGroups.length}장 세트)`}
+        </button>
+        {pensionBuyResult && (
+          pensionBuyResult.type === 'error' ? (
+            <div className="bg-[rgba(239,68,68,0.06)] border border-[rgba(239,68,68,0.2)] rounded-lg p-3 text-[#fca5a5] text-[13px] mt-2.5">{pensionBuyResult.message}</div>
+          ) : (
+            <div className="bg-[rgba(34,197,94,0.06)] border border-[rgba(34,197,94,0.2)] rounded-lg p-3 text-[#86efac] text-[13px] mt-2.5 leading-6">
+              <strong className="block text-[14px] text-[#4ade80] font-bold mb-1">구매 완료!</strong>
+              {pensionBuyResult.results.map((d, i) => (
+                <div key={i}>{d.round}회 · {d.group}조 {d.numbers.join('')}</div>
+              ))}
+            </div>
+          )
+        )}
+      </Card>}
     </div>
   );
 };

@@ -21,31 +21,42 @@ const PensionTab = ({ results, onGenerate, onRegenerate, loading }) => {
         )}
       </div>
 
+      {results.length > 0 && (
+        <p className="text-[11px] text-muted mb-3 leading-5 text-center">
+          생성된 번호는 <span className="text-dim">참고용</span>입니다. 실제 구매 번호는 동행복권 서버가 별도로 배정합니다.
+        </p>
+      )}
+
       <div>
-        {results.map((r, i) => (
-          <div key={i} className="bg-surface border border-night border-t-[rgba(255,255,255,0.07)] rounded-xl p-4 px-[18px] mb-2">
-            <div className="flex justify-between items-center mb-3.5">
-              <span className="text-[11px] font-semibold text-muted bg-surface3 px-[9px] py-[3px] rounded-full uppercase tracking-[0.3px]">
-                {r.strategy}
-              </span>
-            </div>
-            <div className="flex items-center justify-center gap-1.5">
-              <div className="flex flex-col items-center mr-2.5">
-                <span className="text-[28px] font-extrabold text-gold leading-none">{r.group}</span>
-                <span className="text-[10px] text-muted mt-0.5">조</span>
+        {results.map((r, i) => {
+          return (
+            <div
+              key={i}
+              className="bg-surface border border-night rounded-xl p-4 px-[18px] mb-2"
+            >
+              <div className="flex justify-between items-center mb-3.5">
+                <span className="text-[11px] font-semibold text-muted bg-surface3 px-[9px] py-[3px] rounded-full uppercase tracking-[0.3px]">
+                  {r.strategy}
+                </span>
               </div>
-              {r.numbers.map((d, j) => (
-                <div
-                  key={j}
-                  className="w-[38px] h-[52px] bg-surface3 border border-night border-t-[rgba(255,255,255,0.07)] rounded-[7px] flex items-center justify-center text-[22px] font-extrabold text-[#38BDF8] tabular-nums"
-                  style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)' }}
-                >
-                  {d}
+              <div className="flex items-center justify-center gap-1.5">
+                <div className="flex flex-col items-center mr-2.5">
+                  <span className="text-[28px] font-extrabold text-gold leading-none">{r.group}</span>
+                  <span className="text-[10px] text-muted mt-0.5">조</span>
                 </div>
-              ))}
+                {r.numbers.map((d, j) => (
+                  <div
+                    key={j}
+                    className="w-[38px] h-[52px] bg-surface3 border border-night border-t-[rgba(255,255,255,0.07)] rounded-[7px] flex items-center justify-center text-[22px] font-extrabold text-[#38BDF8] tabular-nums"
+                    style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)' }}
+                  >
+                    {d}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
