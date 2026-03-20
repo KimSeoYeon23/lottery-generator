@@ -34,7 +34,7 @@ const App = () => {
 
   const handleGenerate = async (lottoCount) => {
     setLoading(true);
-    const data = await fetchGenerate(lottoCount);
+    const data = await fetchGenerate(typeof lottoCount === 'number' ? lottoCount : 5);
     setLotto(data.lotto);
     setPension(data.pension);
     setStats(data.stats);

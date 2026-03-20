@@ -5,7 +5,7 @@ const PensionTab = ({ results, onGenerate, onRegenerate, loading }) => {
         <button
           className={`flex-1 py-3.5 px-6 rounded-[10px] text-[15px] font-bold text-bg border-none cursor-pointer tracking-wide transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]${loading ? ' loading' : ''}`}
           style={{ background: 'linear-gradient(135deg, #E8A820, #C48B10)', boxShadow: '0 2px 12px rgba(232,168,32,0.25)' }}
-          onClick={onGenerate}
+          onClick={() => onGenerate()}
           disabled={loading}
         >
           번호 생성
@@ -13,7 +13,7 @@ const PensionTab = ({ results, onGenerate, onRegenerate, loading }) => {
         {results.length > 0 && (
           <button
             className="py-3 px-4 bg-surface2 text-dim border border-night text-[14px] font-medium rounded-[10px] cursor-pointer transition-all hover:bg-surface3 hover:text-body whitespace-nowrap disabled:opacity-40"
-            onClick={onRegenerate}
+            onClick={() => onRegenerate()}
             disabled={loading}
           >
             다시 생성
