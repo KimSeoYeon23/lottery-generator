@@ -37,8 +37,11 @@ def check_deps():
 
 def load_credentials():
     if os.path.exists(CREDENTIALS_PATH):
-        with open(CREDENTIALS_PATH, "r") as f:
-            return json.load(f)
+        try:
+            with open(CREDENTIALS_PATH, "r") as f:
+                return json.load(f)
+        except Exception:
+            return None
     return None
 
 

@@ -32,20 +32,23 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
   useEffect(() => {
     setQuantities((prev) => {
       const next = {};
-      selected.forEach((_, i) => { next[i] = prev[i] ?? 1; });
+      selected.forEach((s) => {
+        const key = s.numbers.join('-');
+        next[key] = prev[key] ?? 1;
+      });
       return next;
     });
   }, [selected]);
 
   const totalQty = Object.values(quantities).reduce((a, b) => a + b, 0);
 
-  const setQty = (idx, delta) => {
+  const setQty = (key, delta) => {
     setQuantities((prev) => {
-      const current = prev[idx] ?? 1;
+      const current = prev[key] ?? 1;
       const next = Math.max(1, current + delta);
       const otherTotal = totalQty - current;
       const capped = Math.min(next, MAX_TOTAL - otherTotal);
-      return { ...prev, [idx]: capped };
+      return { ...prev, [key]: capped };
     });
   };
 
@@ -65,17 +68,22 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
 
   const handleBalance = async () => {
     setLoading('balance');
-    const res = await fetch('/api/balance', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-    const data = await res.json();
-    setLoading('');
-    if (data.error) {
-      setBalanceResult({ type: 'error', message: data.error });
-    } else {
-      setBalanceResult({ type: 'balance', data });
+    try {
+      const res = await fetch('/api/balance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setBalanceResult({ type: 'error', message: data.error });
+      } else {
+        setBalanceResult({ type: 'balance', data });
+      }
+    } catch (e) {
+      setBalanceResult({ type: 'error', message: '네트워크 오류가 발생했습니다.' });
+    } finally {
+      setLoading('');
     }
   };
 
@@ -104,21 +112,26 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
     if (totalQty === 0) return;
     if (!confirm(`총 ${totalQty}장 (${(totalQty * 1000).toLocaleString()}원)을 구매하시겠습니까?`)) return;
     setLoading('buy');
-    const tickets = selected.flatMap((s, i) =>
-      Array(quantities[i] ?? 1).fill(s.numbers)
-    );
-    const res = await fetch('/api/buy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tickets, username, password, mock: mockMode }),
-    });
-    const data = await res.json();
-    setLoading('');
-    if (data.error) {
-      setBuyResult({ type: 'error', message: data.error });
-    } else {
-      setBuyResult({ type: 'success', data });
-      onSyncLotto();
+    try {
+      const tickets = selected.flatMap((s) =>
+        Array(quantities[s.numbers.join('-')] ?? 1).fill(s.numbers)
+      );
+      const res = await fetch('/api/buy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tickets, username, password, mock: mockMode }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setBuyResult({ type: 'error', message: data.error });
+      } else {
+        setBuyResult({ type: 'success', data });
+        onSyncLotto();
+      }
+    } catch (e) {
+      setBuyResult({ type: 'error', message: '네트워크 오류가 발생했습니다.' });
+    } finally {
+      setLoading('');
     }
   };
 
@@ -172,8 +185,10 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
           </p>
         ) : (
           <>
-            {selected.map((s, i) => (
-              <div key={i} className="flex items-center gap-2 bg-surface2 px-3 py-2.5 rounded-lg mb-1.5 border border-night">
+            {selected.map((s, i) => {
+              const key = s.numbers.join('-');
+              return (
+              <div key={key} className="flex items-center gap-2 bg-surface2 px-3 py-2.5 rounded-lg mb-1.5 border border-night">
                 <div className="w-[22px] h-[22px] rounded-full bg-[rgba(232,168,32,0.15)] border border-[#C48B10] flex items-center justify-center text-[11px] font-bold text-gold flex-shrink-0">
                   {'ABCDE'[i]}
                 </div>
@@ -183,20 +198,21 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
                 <div className="flex items-center bg-surface border border-night rounded-md overflow-hidden">
                   <button
                     className="w-6 h-6 flex items-center justify-center text-dim text-[14px] cursor-pointer hover:bg-surface3 hover:text-body transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                    onClick={() => setQty(i, -1)}
-                    disabled={(quantities[i] ?? 1) <= 1}
+                    onClick={() => setQty(key, -1)}
+                    disabled={(quantities[key] ?? 1) <= 1}
                   >−</button>
-                  <span className="w-5 text-center text-[13px] font-semibold text-body tabular-nums">{quantities[i] ?? 1}</span>
+                  <span className="w-5 text-center text-[13px] font-semibold text-body tabular-nums">{quantities[key] ?? 1}</span>
                   <button
                     className="w-6 h-6 flex items-center justify-center text-dim text-[14px] cursor-pointer hover:bg-surface3 hover:text-body transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                    onClick={() => setQty(i, +1)}
+                    onClick={() => setQty(key, +1)}
                     disabled={totalQty >= MAX_TOTAL}
                   >+</button>
                 </div>
 
                 <span className="text-muted cursor-pointer text-[16px] ml-0.5 hover:text-[#ef4444] transition-colors" onClick={() => onRemove(i)}>✕</span>
               </div>
-            ))}
+              );
+            })}
             <p className="text-center text-[12px] text-muted py-1 pb-2">
               총 {totalQty}장 · <span className="text-gold font-semibold">{(totalQty * 1000).toLocaleString()}원</span>
               <span className="text-muted"> (최대 5장)</span>

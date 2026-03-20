@@ -35,27 +35,36 @@ const App = () => {
 
   const handleGenerate = async (lottoCount) => {
     setLoading(true);
-    const data = await fetchGenerate(typeof lottoCount === 'number' ? lottoCount : 5);
-    setLotto(data.lotto);
-    setPension(data.pension);
-    setStats(data.stats);
-    setSelected(data.lotto.slice(0, 5));
-    setLoading(false);
+    try {
+      const data = await fetchGenerate(typeof lottoCount === 'number' ? lottoCount : 5);
+      setLotto(data.lotto);
+      setPension(data.pension);
+      setStats(data.stats);
+      setSelected(data.lotto.slice(0, 5));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRegenerateLotto = async (lottoCount) => {
     setLoading(true);
-    const data = await fetchGenerate(lottoCount);
-    setLotto(data.lotto);
-    setSelected(data.lotto.slice(0, 5));
-    setLoading(false);
+    try {
+      const data = await fetchGenerate(lottoCount);
+      setLotto(data.lotto);
+      setSelected(data.lotto.slice(0, 5));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRegeneratePension = async () => {
     setLoading(true);
-    const data = await fetchGenerate();
-    setPension(data.pension);
-    setLoading(false);
+    try {
+      const data = await fetchGenerate();
+      setPension(data.pension);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSelect = (r) => {
@@ -123,9 +132,7 @@ const App = () => {
       {activeTab === 'pension' && (
         <PensionTab
           results={pension}
-          selected={pensionSelected}
-          onSelect={handlePensionSelect}
-          onGenerate={handleGenerate}
+          onGenerate={handleRegeneratePension}
           onRegenerate={handleRegeneratePension}
           loading={loading}
         />

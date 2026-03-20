@@ -66,9 +66,12 @@ const StatsTab = ({ stats }) => {
       </Section>
 
       <Section title="📌 연금복권 조별 출현">
-        {stats.pension.group_freq.map((x) => (
-          <BarRow key={x.group} label={`${x.group}조`} pct={(x.count / 70 * 100).toFixed(1)} count={x.count} variant="pension" />
-        ))}
+        {(() => {
+          const max = Math.max(...stats.pension.group_freq.map((x) => x.count), 1);
+          return stats.pension.group_freq.map((x) => (
+            <BarRow key={x.group} label={`${x.group}조`} pct={(x.count / max * 100).toFixed(1)} count={x.count} variant="pension" />
+          ));
+        })()}
       </Section>
 
       <Section title="📊 연금복권 자리별 TOP 3">
