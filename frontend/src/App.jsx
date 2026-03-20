@@ -29,7 +29,7 @@ const App = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchGenerate(0).then((data) => setStats(data.stats));
+    fetch('/api/stats').then((r) => r.json()).then(setStats);
   }, []);
 
   const handleGenerate = async (lottoCount) => {

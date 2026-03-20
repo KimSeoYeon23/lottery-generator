@@ -12,6 +12,10 @@ def index(request):
     return FileResponse(open(os.path.join(BASE_DIR, 'static', 'index.html'), 'rb'), content_type='text/html')
 
 
+def api_stats(request):
+    return JsonResponse(get_stats())
+
+
 @csrf_exempt
 def api_generate(request):
     if request.method != 'POST':
