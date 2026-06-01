@@ -53,15 +53,15 @@ def main():
         if available < needed:
             send_discord(
                 f"⚠️ **로또 자동구매 취소 — 잔액 부족**\n"
-                f"필요 금액: **{needed:,}원**\n"
-                f"사용 가능 잔액: **{available:,}원**\n"
-                f"부족분: **{needed - available:,}원**"
+                f"필요 금액: **{needed:,}원** / 현재 잔액: **{available:,}원** (부족: {needed - available:,}원)\n"
+                f"👉 충전하기: https://www.dhlottery.co.kr/myPage.do?method=depositMoneyList"
             )
             print(f"잔액 부족: {available}원 / 필요 {needed}원")
             sys.exit(0)
 
         print(f"잔액 확인: {available:,}원 — 구매 진행")
         result = c.buy_lotto(tickets)
+        remaining = c.get_balance()["available"]
 
     except Exception as e:
         send_discord(f"❌ **로또 자동구매 실패**\n```{e}```")
@@ -82,6 +82,7 @@ def main():
         lines.append(f"`{t['slot']}` {nums}  _{t['mode']}_")
     lines.append("")
     lines.append(f"💳 {len(bought)}게임 × 1,000원 = **{len(bought) * 1000:,}원**")
+    lines.append(f"💰 구매 후 잔액: **{remaining:,}원**")
 
     msg = "\n".join(lines)
     send_discord(msg)
