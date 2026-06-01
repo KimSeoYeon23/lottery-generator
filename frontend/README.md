@@ -1,16 +1,33 @@
-# React + Vite
+# lottery-generator frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React/Vite frontend for `lottery-generator`.
 
-Currently, two official plugins are available:
+The UI lets users generate Lotto 6/45 and Pension Lottery 720+ number sets, review draw statistics, select Lotto tickets, and use the local backend for balance and purchase-related workflows.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Responsible Use
 
-## React Compiler
+Generated numbers are not predictions and do not improve the odds of winning. The frontend should keep that message visible in user-facing flows, especially around generation and purchase actions.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+See the root [RESPONSIBLE_USE.md](../RESPONSIBLE_USE.md) and [SECURITY.md](../SECURITY.md).
 
-## Expanding the ESLint configuration
+## Development
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```sh
+pnpm install
+pnpm run dev
+```
+
+The development server runs at:
+
+```text
+http://localhost:5173
+```
+
+The Vite dev server proxies `/api` requests to the Django backend configured in `vite.config.js`.
+
+## Scripts
+
+- `pnpm run dev` - start the Vite dev server.
+- `pnpm run build` - build the frontend into `dist/`.
+- `pnpm run lint` - run ESLint.
+- `pnpm run preview` - preview the production build.
