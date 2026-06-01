@@ -1,8 +1,4 @@
-"""동행복권 공개 API로 역대 통계 수집 후 stats.json 저장
-
-참고: 동행복권은 자동화 요청을 서버 레벨에서 차단합니다.
-      이 스크립트는 차단이 풀린 네트워크 환경에서만 동작합니다.
-"""
+"""동행복권 공개 API로 역대 통계 수집 후 ~/.lottery/stats.json 저장"""
 
 import json
 import os
@@ -11,8 +7,7 @@ from collections import Counter
 
 import requests
 
-# 스크립트와 같은 디렉토리에 저장 (Docker: /app/stats.json)
-STATS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stats.json")
+STATS_PATH = os.path.expanduser("~/.lottery/stats.json")
 API_URL = "https://www.dhlottery.co.kr/common.do?method=getLottoNumber&drwNo={}"
 HEADERS = {
     "User-Agent": (
