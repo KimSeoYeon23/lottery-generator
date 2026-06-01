@@ -1,0 +1,33 @@
+name: Auto Buy Lottery
+
+on:
+  schedule:
+    # 매주 토요일 19:00 KST (= 10:00 UTC) — 마감(20:00 KST) 1시간 전
+    - cron: '0 10 * * 6'
+  workflow_dispatch:
+    inputs:
+      ticket_count:
+        description: '구매 장수 (1~5)'
+        default: '5'
+        required: false
+
+jobs:
+  buy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests pycryptodome
+
+      - name: Buy lottery tickets
+        env:
+          LOTTERY_USERNAME: ${{ secrets.LOTTERY_USERNAME }}
+          LOTTERY_PASSWORD: ${{ secrets.LOTTERY_PASSWORD }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          TICKET_COUNT: ${{ github.event.inputs.ticket_count || '5' }}
+        run: python backend/buy_lotto.py
