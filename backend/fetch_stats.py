@@ -14,6 +14,7 @@ import requests
 # GitHub Actions: backend/stats.json (커밋 후 자동 반영)
 STATS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stats.json")
 API_URL = "https://www.dhlottery.co.kr/lt645/selectPstLt645Info.do?srchLtEpsd={}"
+PENSION_LIST_URL = "https://m.dhlottery.co.kr/pt720/selectPstPt720WnList.do"
 
 
 def _get(session, round_no):
@@ -75,6 +76,72 @@ def calc_sum_range(sums, pct=0.80):
     return sums_sorted[cut], sums_sorted[-cut - 1]
 
 
+def fetch_pension_results(session):
+    headers = {
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "Referer": "https://m.dhlottery.co.kr/pt720/result",
+        "X-Requested-With": "XMLHttpRequest",
+    }
+    data = session.get(PENSION_LIST_URL, headers=headers, timeout=10).json()
+    results = data.get("data", {}).get("result", [])
+    return [
+        {
+            "round": int(item["psltEpsd"]),
+            "draw_date": item.get("psltRflYmd", ""),
+            "wnBndNo": item["wnBndNo"],
+            "wnRnkVl": item["wnRnkVl"],
+            "bnsRnkVl": item.get("bnsRnkVl", ""),
+        }
+        for item in results
+        if item.get("wnBndNo") and item.get("wnRnkVl")
+    ]
+
+
+def calc_pension_stats(results):
+    group_freq = Counter()
+    digit_freq = [Counter() for _ in range(6)]
+
+    for item in results:
+        group_freq[int(item["wnBndNo"])] += 1
+        digits = str(item["wnRnkVl"]).zfill(6)
+        if len(digits) != 6 or not digits.isdigit():
+            continue
+        for idx, digit in enumerate(digits):
+            digit_freq[idx][int(digit)] += 1
+
+    return dict(group_freq), [dict(freq) for freq in digit_freq]
+
+
+def collect_pension_stats(session):
+    pension_results = fetch_pension_results(session)
+    if not pension_results:
+        raise RuntimeError("수집된 연금복권 데이터가 없습니다.")
+    pension_group_freq, pension_digit_freq = calc_pension_stats(pension_results)
+    latest_pension = max(item["round"] for item in pension_results)
+    return latest_pension, pension_group_freq, pension_digit_freq
+
+
+def run_pension():
+    session = requests.Session()
+    session.headers.update({"User-Agent": "Mozilla/5.0"})
+
+    print("연금복권720+ 데이터 수집 중...")
+    latest_pension, pension_group_freq, pension_digit_freq = collect_pension_stats(session)
+
+    stats = load() or {}
+    stats.update({
+        "pension_latest_round": latest_pension,
+        "pension_group_freq": pension_group_freq,
+        "pension_digit_freq": pension_digit_freq,
+    })
+
+    with open(STATS_PATH, "w") as f:
+        json.dump(stats, f)
+
+    print(f"연금복권 통계 저장 완료: {STATS_PATH} (최신 {latest_pension}회)")
+    return stats
+
+
 def run():
     session = requests.Session()
     session.headers.update({"User-Agent": "Mozilla/5.0"})
@@ -92,12 +159,18 @@ def run():
     if not sums:
         raise RuntimeError("수집된 데이터가 없습니다.")
 
+    print("연금복권720+ 데이터 수집 중...")
+    latest_pension, pension_group_freq, pension_digit_freq = collect_pension_stats(session)
+
     sum_lo, sum_hi = calc_sum_range(sums)
     stats = {
         "latest_round": latest,
         "lotto_freq": dict(freq),
         "lotto_recent_50": dict(recent_50),
         "lotto_sum_range": [sum_lo, sum_hi],
+        "pension_latest_round": latest_pension,
+        "pension_group_freq": pension_group_freq,
+        "pension_digit_freq": pension_digit_freq,
     }
 
     with open(STATS_PATH, "w") as f:

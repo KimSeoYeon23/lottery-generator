@@ -313,8 +313,7 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
         )}
       </Card>
 
-      {/* 연금복권 구매 카드 — TODO: connPro.do E002 미해결, 임시 비활성화 */}
-      {false && <Card>
+      <Card>
         <div className="flex items-center justify-between mb-3.5">
           <p className="text-[13px] font-semibold text-dim flex items-center gap-1.5">🎰 연금복권 720+ 구매</p>
           <label className="flex items-center gap-1.5 cursor-pointer select-none">
@@ -359,6 +358,13 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
           {mockMode ? '테스트 구매' : '연금복권 구매'}
           {pensionGroups.length > 1 && ` (${pensionGroups.length}장 세트)`}
         </button>
+        {pendingBuy?.id === 'pension' && (
+          <ConfirmBanner
+            message={pendingBuy.message}
+            onConfirm={pendingBuy.onConfirm}
+            onCancel={() => setPendingBuy(null)}
+          />
+        )}
         {pensionBuyResult && (
           pensionBuyResult.type === 'error' ? (
             <div className="bg-[rgba(239,68,68,0.06)] border border-[rgba(239,68,68,0.2)] rounded-lg p-3 text-danger text-[13px] mt-2.5">{pensionBuyResult.message}</div>
@@ -371,7 +377,7 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
             </div>
           )
         )}
-      </Card>}
+      </Card>
     </div>
   );
 };

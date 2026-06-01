@@ -18,6 +18,22 @@ def _load_live_stats():
         pass
     return None, None, None
 
+
+def _load_pension_stats():
+    try:
+        import fetch_stats
+        data = fetch_stats.load()
+        if data and data.get("pension_group_freq") and data.get("pension_digit_freq"):
+            digit_freq = data["pension_digit_freq"]
+            if len(digit_freq) == 6:
+                return (
+                    {int(k): v for k, v in data["pension_group_freq"].items()},
+                    [{int(k): v for k, v in freq.items()} for freq in digit_freq],
+                )
+    except Exception:
+        pass
+    return None, None
+
 # 역대 통계 데이터 (공식 동행복권 기준, ~2026년 5월 하드코딩 폴백)
 LOTTO_FREQ = {
     1: 157, 2: 145, 3: 157, 4: 154, 5: 144, 6: 154, 7: 150, 8: 145, 9: 125,
@@ -158,8 +174,9 @@ class LottoGenerator:
 
 class PensionGenerator:
     def __init__(self):
-        self.group_freq = PENSION_GROUP_FREQ
-        self.digit_freq = PENSION_DIGIT_FREQ
+        live_group_freq, live_digit_freq = _load_pension_stats()
+        self.group_freq = live_group_freq or PENSION_GROUP_FREQ
+        self.digit_freq = live_digit_freq or PENSION_DIGIT_FREQ
 
     def _pick(self, freq):
         pool = list(freq.keys())
@@ -231,9 +248,12 @@ class PensionGenerator:
 def get_stats():
     """프론트엔드용 통계 데이터"""
     live_freq, live_recent, live_sum = _load_live_stats()
+    live_pension_group_freq, live_pension_digit_freq = _load_pension_stats()
     freq = live_freq or LOTTO_FREQ
     recent = live_recent or LOTTO_RECENT_50
     sum_range = live_sum or LOTTO_SUM_RANGE
+    pension_group_freq = live_pension_group_freq or PENSION_GROUP_FREQ
+    pension_digit_freq = live_pension_digit_freq or PENSION_DIGIT_FREQ
 
     top10 = sorted(freq.items(), key=lambda x: x[1], reverse=True)[:10]
     bot5 = sorted(freq.items(), key=lambda x: x[1])[:5]
@@ -243,7 +263,7 @@ def get_stats():
     pos_names = ["십만", "만", "천", "백", "십", "일"]
     pension_stats = []
     for p in range(6):
-        top3 = Counter(PENSION_DIGIT_FREQ[p]).most_common(3)
+        top3 = Counter(pension_digit_freq[p]).most_common(3)
         pension_stats.append({"position": pos_names[p],
                               "top3": [{"digit": d, "count": c} for d, c in top3]})
 
@@ -256,7 +276,7 @@ def get_stats():
             "sum_range": list(sum_range),
         },
         "pension": {
-            "group_freq": [{"group": g, "count": c} for g, c in sorted(PENSION_GROUP_FREQ.items())],
+            "group_freq": [{"group": g, "count": c} for g, c in sorted(pension_group_freq.items())],
             "digit_stats": pension_stats,
         },
     }

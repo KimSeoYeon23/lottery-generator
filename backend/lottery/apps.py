@@ -20,15 +20,23 @@ class LotteryConfig(AppConfig):
 
             scheduler = BackgroundScheduler(timezone="Asia/Seoul")
 
-            # 매주 토요일 밤 21:30 (추첨 후) 자동 업데이트
+            # 매주 목요일 밤 21:30 (추첨 후) 연금복권 통계 업데이트
+            scheduler.add_job(
+                fetch_stats.run_pension,
+                CronTrigger(day_of_week="thu", hour=21, minute=30),
+                id="fetch_pension_stats",
+                replace_existing=True,
+            )
+
+            # 매주 토요일 밤 21:30 (추첨 후) 전체 통계 업데이트
             scheduler.add_job(
                 fetch_stats.run,
                 CronTrigger(day_of_week="sat", hour=21, minute=30),
-                id="fetch_lotto_stats",
+                id="fetch_lottery_stats",
                 replace_existing=True,
             )
 
             scheduler.start()
-            print("[Scheduler] 로또 통계 자동 업데이트 스케줄러 시작 (매주 토요일 21:30)")
+            print("[Scheduler] 복권 통계 자동 업데이트 스케줄러 시작 (목/토 21:30)")
         except Exception as e:
             print(f"[Scheduler] 시작 실패: {e}")
