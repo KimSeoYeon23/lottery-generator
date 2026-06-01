@@ -1,4 +1,7 @@
-"""동행복권 공개 API로 역대 통계 수집 후 ~/.lottery/stats.json 저장"""
+"""동행복권 API로 역대 통계 수집 후 ~/.lottery/stats.json 저장
+
+API: https://www.dhlottery.co.kr/lt645/selectPstLt645Info.do?srchLtEpsd={회차}
+"""
 
 import json
 import os
@@ -7,37 +10,35 @@ from collections import Counter
 
 import requests
 
-STATS_PATH = os.path.expanduser("~/.lottery/stats.json")
-API_URL = "https://www.dhlottery.co.kr/common.do?method=getLottoNumber&drwNo={}"
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
-    ),
-    "Accept": "application/json, text/javascript, */*; q=0.01",
-    "X-Requested-With": "XMLHttpRequest",
-    "Referer": "https://www.dhlottery.co.kr/",
-}
+# Docker: /app/stats.json (./backend:/app 볼륨 마운트)
+# GitHub Actions: backend/stats.json (커밋 후 자동 반영)
+STATS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stats.json")
+API_URL = "https://www.dhlottery.co.kr/lt645/selectPstLt645Info.do?srchLtEpsd={}"
 
 
-def _session():
-    s = requests.Session()
-    s.headers.update(HEADERS)
-    s.get("https://www.dhlottery.co.kr/", timeout=10)
-    return s
+def _get(session, round_no):
+    """회차 데이터 조회. 없으면 None 반환."""
+    try:
+        data = session.get(API_URL.format(round_no), timeout=10).json()
+        items = data.get("data", {}).get("list", [])
+        if not items:
+            return None
+        item = items[0]
+        return {
+            "nums": [item[f"tm{i}WnNo"] for i in range(1, 7)],
+            "bonus": item["bnsWnNo"],
+        }
+    except Exception:
+        return None
 
 
 def fetch_latest_round(session):
     lo, hi = 1, 2000
     while lo < hi:
         mid = (lo + hi + 1) // 2
-        try:
-            data = session.get(API_URL.format(mid), timeout=10).json()
-            if data.get("returnValue") == "success":
-                lo = mid
-            else:
-                hi = mid - 1
-        except Exception:
+        if _get(session, mid):
+            lo = mid
+        else:
             hi = mid - 1
     return lo
 
@@ -48,19 +49,17 @@ def fetch_all_results(session, latest_round):
     sums = []
 
     for rnd in range(1, latest_round + 1):
-        try:
-            data = session.get(API_URL.format(rnd), timeout=10).json()
-        except Exception:
+        result = _get(session, rnd)
+        if not result:
+            time.sleep(0.1)
             continue
-        if data.get("returnValue") != "success":
-            continue
-        nums = [data[f"drwtNo{i}"] for i in range(1, 7)]
-        for n in nums:
+        for n in result["nums"]:
             freq[n] += 1
         if rnd > latest_round - 50:
-            for n in nums:
+            for n in result["nums"]:
                 recent_50[n] += 1
-        sums.append(sum(nums))
+        sums.append(sum(result["nums"]))
+
         if rnd % 100 == 0:
             print(f"  {rnd}/{latest_round}회 수집 완료...")
         time.sleep(0.05)
@@ -77,15 +76,15 @@ def calc_sum_range(sums, pct=0.80):
 
 
 def run():
-    print("세션 초기화 중...")
-    session = _session()
+    session = requests.Session()
+    session.headers.update({"User-Agent": "Mozilla/5.0"})
 
     print("최신 회차 탐색 중...")
     latest = fetch_latest_round(session)
     print(f"최신 회차: {latest}회")
 
     if latest <= 1:
-        raise RuntimeError("API 접근 차단됨 — 다른 네트워크에서 시도해주세요.")
+        raise RuntimeError("최신 회차 탐색 실패")
 
     print("전체 데이터 수집 중...")
     freq, recent_50, sums = fetch_all_results(session, latest)
