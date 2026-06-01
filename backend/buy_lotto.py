@@ -42,11 +42,25 @@ def main():
         gen = LottoGenerator()
         tickets = [r["numbers"] for r in gen.generate(TICKET_COUNT)]
 
-        # 로그인 및 구매
+        # 로그인
         print("로그인 중...")
         c = DhlotteryClient(USERNAME, PASSWORD)
 
-        print("구매 중...")
+        # 잔액 확인
+        balance = c.get_balance()
+        available = balance["available"]
+        needed = TICKET_COUNT * 1000
+        if available < needed:
+            send_discord(
+                f"⚠️ **로또 자동구매 취소 — 잔액 부족**\n"
+                f"필요 금액: **{needed:,}원**\n"
+                f"사용 가능 잔액: **{available:,}원**\n"
+                f"부족분: **{needed - available:,}원**"
+            )
+            print(f"잔액 부족: {available}원 / 필요 {needed}원")
+            sys.exit(0)
+
+        print(f"잔액 확인: {available:,}원 — 구매 진행")
         result = c.buy_lotto(tickets)
 
     except Exception as e:
