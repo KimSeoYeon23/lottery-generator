@@ -23,7 +23,10 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install playwright
+
+      - name: Install Chromium
+        run: playwright install chromium --with-deps
 
       - name: Fetch lottery stats
         run: python backend/fetch_stats.py
