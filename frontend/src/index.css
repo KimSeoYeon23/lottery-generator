@@ -14,6 +14,10 @@
   --color-muted:    #A8B0C8;
   --color-gold:     #E8A820;
   --color-gold-dark:#C48B10;
+  --color-sky:      #38BDF8;
+  --color-danger:   #fca5a5;
+  --color-success:  #86efac;
+  --color-success-hi: #4ade80;
 }
 
 /* ── 기본 스타일 ─── */
@@ -64,6 +68,16 @@ body {
 .ball.r4 { background: radial-gradient(circle at 38% 35%, #9CA3AF, #4B5563); box-shadow: 0 4px 12px rgba(156,163,175,0.25); }
 .ball.r5 { background: radial-gradient(circle at 38% 35%, #4ADE80, #15803D); box-shadow: 0 4px 12px rgba(74,222,128,0.3); }
 
+/* ── 번호 생성 버튼 ─── */
+.btn-generate {
+  background: linear-gradient(135deg, #E8A820, #C48B10);
+  box-shadow: 0 2px 12px rgba(232, 168, 32, 0.25);
+  transition: box-shadow 0.2s ease, opacity 0.2s;
+}
+.btn-generate:hover:not(:disabled) {
+  box-shadow: 0 4px 20px rgba(232, 168, 32, 0.4);
+}
+
 /* ── 탭 언더라인 (active) ─── */
 .tab-item {
   position: relative;
@@ -102,8 +116,16 @@ body {
   pointer-events: none;
 }
 
+/* ── 카드 기본 스타일 ─── */
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-night);
+  border-top-color: rgba(255, 255, 255, 0.07);
+  border-radius: 0.75rem;
+}
+
 /* ── 카드 페이드인 ─── */
-.number-card { animation: fadeIn 0.25s ease; }
+.number-card { animation: fadeIn 0.25s ease-out; }
 
 /* ── 로딩 스피너 ─── */
 .loading::after {
@@ -123,3 +145,8 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .number-card { animation: none; }
+  .loading::after { animation: none; }
+}

@@ -231,11 +231,15 @@ class PensionGenerator:
 
 def get_stats():
     """프론트엔드용 통계 데이터"""
-    freq = LOTTO_FREQ
+    live_freq, live_recent, live_sum = _load_live_stats()
+    freq = live_freq or LOTTO_FREQ
+    recent = live_recent or LOTTO_RECENT_50
+    sum_range = live_sum or LOTTO_SUM_RANGE
+
     top10 = sorted(freq.items(), key=lambda x: x[1], reverse=True)[:10]
     bot5 = sorted(freq.items(), key=lambda x: x[1])[:5]
-    hot5 = sorted(LOTTO_RECENT_50.items(), key=lambda x: x[1], reverse=True)[:5]
-    cold5 = sorted(LOTTO_RECENT_50.items(), key=lambda x: x[1])[:5]
+    hot5 = sorted(recent.items(), key=lambda x: x[1], reverse=True)[:5]
+    cold5 = sorted(recent.items(), key=lambda x: x[1])[:5]
 
     pos_names = ["십만", "만", "천", "백", "십", "일"]
     pension_stats = []
@@ -250,7 +254,7 @@ def get_stats():
             "bottom5": [{"number": n, "count": c} for n, c in bot5],
             "hot5": [{"number": n, "count": c} for n, c in hot5],
             "cold5": [{"number": n, "count": c} for n, c in cold5],
-            "sum_range": list(LOTTO_SUM_RANGE),
+            "sum_range": list(sum_range),
         },
         "pension": {
             "group_freq": [{"group": g, "count": c} for g, c in sorted(PENSION_GROUP_FREQ.items())],

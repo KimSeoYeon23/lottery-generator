@@ -1,13 +1,30 @@
 import { useState, useEffect } from 'react';
 
 const Card = ({ children }) => (
-  <div className="bg-surface border border-night border-t-[rgba(255,255,255,0.07)] rounded-xl p-[18px]">
+  <div className="card p-[18px]">
     {children}
   </div>
 );
 
 const SectionTitle = ({ children }) => (
   <p className="text-[13px] font-semibold text-dim flex items-center gap-1.5 mb-3.5">{children}</p>
+);
+
+const ConfirmBanner = ({ message, onConfirm, onCancel }) => (
+  <div className="bg-surface2 border border-[rgba(232,168,32,0.3)] rounded-lg p-3 mt-2">
+    <p className="text-[13px] text-body mb-2.5">{message}</p>
+    <div className="flex gap-2">
+      <button
+        className="flex-1 py-2 text-[13px] font-semibold rounded-lg cursor-pointer transition-colors"
+        style={{ background: 'linear-gradient(135deg, #E8A820, #C48B10)', color: '#0d1120' }}
+        onClick={onConfirm}
+      >확인</button>
+      <button
+        className="flex-1 py-2 text-[13px] font-medium bg-surface3 text-dim border border-night rounded-lg cursor-pointer hover:text-body transition-colors"
+        onClick={onCancel}
+      >취소</button>
+    </div>
+  </div>
 );
 
 const MAX_TOTAL = 5;
@@ -19,6 +36,7 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
   const [buyResult, setBuyResult] = useState(null);
   const [pensionBuyResult, setPensionBuyResult] = useState(null);
   const [loading, setLoading] = useState('');
+  const [pendingBuy, setPendingBuy] = useState(null);
   const [quantities, setQuantities] = useState({});
   const [mockMode, setMockMode] = useState(false);
   const [pensionGroups, setPensionGroups] = useState([]);
@@ -87,11 +105,8 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
     }
   };
 
-  const handleBuyPension = async () => {
-    if (!pensionGroups.length) return;
-    const totalCost = (pensionGroups.length * 1000).toLocaleString();
-    const groupStr = pensionGroups.map((g) => `${g}조`).join(', ');
-    if (!confirm(`연금복권 ${groupStr} 자동배정 총 ${pensionGroups.length}장 (${totalCost}원)을 구매하시겠습니까?`)) return;
+  const doBuyPension = async () => {
+    setPendingBuy(null);
     setLoading('pension');
     try {
       const res = await fetch('/api/buy-pension', {
@@ -108,9 +123,19 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
     setLoading('');
   };
 
-  const handleBuy = async () => {
-    if (totalQty === 0) return;
-    if (!confirm(`총 ${totalQty}장 (${(totalQty * 1000).toLocaleString()}원)을 구매하시겠습니까?`)) return;
+  const handleBuyPension = () => {
+    if (!pensionGroups.length) return;
+    const totalCost = (pensionGroups.length * 1000).toLocaleString();
+    const groupStr = pensionGroups.map((g) => `${g}조`).join(', ');
+    setPendingBuy({
+      id: 'pension',
+      message: `연금복권 ${groupStr} 자동배정 총 ${pensionGroups.length}장 (${totalCost}원)을 구매하시겠습니까?`,
+      onConfirm: doBuyPension,
+    });
+  };
+
+  const doBuy = async () => {
+    setPendingBuy(null);
     setLoading('buy');
     try {
       const tickets = selected.flatMap((s) =>
@@ -135,14 +160,23 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
     }
   };
 
-  const inputCls = "w-full px-3 py-[11px] mb-2 bg-surface2 border border-night rounded-lg text-body text-[14px] outline-none transition-colors focus:border-[rgba(232,168,32,0.5)] placeholder:text-muted";
+  const handleBuy = () => {
+    if (totalQty === 0) return;
+    setPendingBuy({
+      id: 'buy',
+      message: `총 ${totalQty}장 (${(totalQty * 1000).toLocaleString()}원)을 구매하시겠습니까?`,
+      onConfirm: doBuy,
+    });
+  };
+
+  const inputCls = "w-full px-3 py-3 mb-2 bg-surface2 border border-night rounded-lg text-body text-[14px] outline-none transition-colors focus:border-[rgba(232,168,32,0.5)] placeholder:text-muted";
 
   return (
     <div className="flex flex-col gap-3">
       <Card>
-        <SectionTitle>🔐 동행복권 계정</SectionTitle>
-        <input className={inputCls} type="text" placeholder="아이디" value={username} onChange={(e) => setUsername(e.target.value)} />
-        <input className={inputCls} type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <SectionTitle><span aria-hidden="true">🔐</span> 동행복권 계정</SectionTitle>
+        <input className={inputCls} type="text" placeholder="아이디" aria-label="동행복권 아이디" value={username} onChange={(e) => setUsername(e.target.value)} />
+        <input className={inputCls} type="password" placeholder="비밀번호" aria-label="동행복권 비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} />
         <div className="flex gap-2 mt-1">
           <button className="flex-1 py-2.5 text-[13px] font-medium bg-surface2 text-dim border border-night rounded-[10px] cursor-pointer hover:bg-surface3 hover:text-body transition-all"
             onClick={handleSaveCreds}>계정 저장</button>
@@ -153,10 +187,10 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
         {balanceResult && (
           <div className="mt-3">
             {balanceResult.type === 'error' && (
-              <div className="bg-[rgba(239,68,68,0.06)] border border-[rgba(239,68,68,0.2)] rounded-lg p-3 text-[#fca5a5] text-[13px]">{balanceResult.message}</div>
+              <div className="bg-[rgba(239,68,68,0.06)] border border-[rgba(239,68,68,0.2)] rounded-lg p-3 text-danger text-[13px]">{balanceResult.message}</div>
             )}
             {balanceResult.type === 'success' && (
-              <div className="bg-[rgba(34,197,94,0.06)] border border-[rgba(34,197,94,0.2)] rounded-lg p-3 text-[#86efac] text-[13px]">{balanceResult.message}</div>
+              <div className="bg-[rgba(34,197,94,0.06)] border border-[rgba(34,197,94,0.2)] rounded-lg p-3 text-success text-[13px]">{balanceResult.message}</div>
             )}
             {balanceResult.type === 'balance' && (
               <div className="bg-surface2 rounded-lg p-3 border border-night">
@@ -166,7 +200,7 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
                   ['예약 구매', `${balanceResult.data.reserved.toLocaleString()}원`, false],
                   ['구매 가능', `${balanceResult.data.tickets}장`, true],
                 ].map(([label, value, highlight], i, arr) => (
-                  <div key={i} className={`flex justify-between py-[5px]${i < arr.length - 1 ? ' border-b border-night' : ''}`}>
+                  <div key={i} className={`flex justify-between py-1.5${i < arr.length - 1 ? ' border-b border-night' : ''}`}>
                     <span className="text-muted text-[12px]">{label}</span>
                     <span className={`font-semibold text-[13px] tabular-nums${highlight ? ' text-gold' : ' text-body'}`}>{value}</span>
                   </div>
@@ -178,18 +212,24 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
       </Card>
 
       <Card>
-        <SectionTitle>🎯 선택된 번호</SectionTitle>
+        <SectionTitle><span aria-hidden="true">🎯</span> 선택된 번호</SectionTitle>
         {selected.length === 0 ? (
-          <p className="text-center text-body opacity-60 py-9 text-[13px] leading-7">
-            로또 탭에서 번호 카드를 클릭해<br/>구매할 번호를 선택하세요.
-          </p>
+          <div className="flex flex-col items-center py-8 gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor" className="w-10 h-10 text-surface3">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
+            </svg>
+            <div className="text-center">
+              <p className="text-[13px] font-medium text-body mb-1">선택된 번호가 없습니다</p>
+              <p className="text-[12px] text-muted leading-5">로또 탭에서 번호 카드를 클릭해<br/>구매할 번호를 선택하세요</p>
+            </div>
+          </div>
         ) : (
           <>
             {selected.map((s, i) => {
               const key = s.numbers.join('-');
               return (
               <div key={key} className="flex items-center gap-2 bg-surface2 px-3 py-2.5 rounded-lg mb-1.5 border border-night">
-                <div className="w-[22px] h-[22px] rounded-full bg-[rgba(232,168,32,0.15)] border border-[#C48B10] flex items-center justify-center text-[11px] font-bold text-gold flex-shrink-0">
+                <div className="w-5 h-5 rounded-full bg-[rgba(232,168,32,0.15)] border border-[#C48B10] flex items-center justify-center text-[11px] font-bold text-gold flex-shrink-0">
                   {'ABCDE'[i]}
                 </div>
                 <span className="flex-1 font-semibold tabular-nums text-body text-[13px]">{s.numbers.join('  ')}</span>
@@ -209,7 +249,15 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
                   >+</button>
                 </div>
 
-                <span className="text-muted cursor-pointer text-[16px] ml-0.5 hover:text-[#ef4444] transition-colors" onClick={() => onRemove(i)}>✕</span>
+                <button
+                  aria-label={`${s.numbers.join(' ')} 번호 제거`}
+                  className="w-11 h-11 flex items-center justify-center text-muted hover:text-[#ef4444] transition-colors cursor-pointer"
+                  onClick={() => onRemove(i)}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                    <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                  </svg>
+                </button>
               </div>
               );
             })}
@@ -234,19 +282,27 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
         </label>
 
         <button
-          className={`w-full py-3.5 mt-2 rounded-[10px] text-[15px] font-semibold border cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed ${mockMode ? 'bg-[rgba(232,168,32,0.12)] text-gold border-[rgba(232,168,32,0.3)] hover:bg-[rgba(232,168,32,0.2)]' : 'bg-[rgba(239,68,68,0.12)] text-[#fca5a5] border-[rgba(239,68,68,0.25)] hover:bg-[rgba(239,68,68,0.2)]'}${loading === 'buy' ? ' loading' : ''}`}
+          className={`w-full py-3.5 mt-2 rounded-[10px] text-[15px] font-semibold border cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed ${mockMode ? 'bg-[rgba(232,168,32,0.12)] text-gold border-[rgba(232,168,32,0.3)] hover:bg-[rgba(232,168,32,0.2)]' : 'bg-[rgba(239,68,68,0.12)] text-danger border-[rgba(239,68,68,0.25)] hover:bg-[rgba(239,68,68,0.2)]'}${loading === 'buy' ? ' loading' : ''}`}
           onClick={handleBuy}
           disabled={selected.length === 0 || loading === 'buy'}
         >
           {mockMode ? '테스트 구매' : '구매하기'}
         </button>
 
+        {pendingBuy?.id === 'buy' && (
+          <ConfirmBanner
+            message={pendingBuy.message}
+            onConfirm={pendingBuy.onConfirm}
+            onCancel={() => setPendingBuy(null)}
+          />
+        )}
+
         {buyResult && (
           buyResult.type === 'error' ? (
-            <div className="bg-[rgba(239,68,68,0.06)] border border-[rgba(239,68,68,0.2)] rounded-lg p-3 text-[#fca5a5] text-[13px] mt-2.5">{buyResult.message}</div>
+            <div className="bg-[rgba(239,68,68,0.06)] border border-[rgba(239,68,68,0.2)] rounded-lg p-3 text-danger text-[13px] mt-2.5">{buyResult.message}</div>
           ) : (
-            <div className="bg-[rgba(34,197,94,0.06)] border border-[rgba(34,197,94,0.2)] rounded-lg p-3 text-[#86efac] text-[13px] mt-2.5 leading-6">
-              <strong className="block text-[14px] text-[#4ade80] font-bold mb-1">구매 완료!</strong>
+            <div className="bg-[rgba(34,197,94,0.06)] border border-[rgba(34,197,94,0.2)] rounded-lg p-3 text-success text-[13px] mt-2.5 leading-6">
+              <strong className="block text-[14px] text-success-hi font-bold mb-1">구매 완료!</strong>
               <div>회차: {buyResult.data.round}회</div>
               <div>추첨일: {buyResult.data.draw_date}</div>
               {buyResult.data.tickets.map((t) => (
@@ -305,10 +361,10 @@ const BuyTab = ({ selected, pensionSelected, onRemove, onPensionClear, onSyncLot
         </button>
         {pensionBuyResult && (
           pensionBuyResult.type === 'error' ? (
-            <div className="bg-[rgba(239,68,68,0.06)] border border-[rgba(239,68,68,0.2)] rounded-lg p-3 text-[#fca5a5] text-[13px] mt-2.5">{pensionBuyResult.message}</div>
+            <div className="bg-[rgba(239,68,68,0.06)] border border-[rgba(239,68,68,0.2)] rounded-lg p-3 text-danger text-[13px] mt-2.5">{pensionBuyResult.message}</div>
           ) : (
-            <div className="bg-[rgba(34,197,94,0.06)] border border-[rgba(34,197,94,0.2)] rounded-lg p-3 text-[#86efac] text-[13px] mt-2.5 leading-6">
-              <strong className="block text-[14px] text-[#4ade80] font-bold mb-1">구매 완료!</strong>
+            <div className="bg-[rgba(34,197,94,0.06)] border border-[rgba(34,197,94,0.2)] rounded-lg p-3 text-success text-[13px] mt-2.5 leading-6">
+              <strong className="block text-[14px] text-success-hi font-bold mb-1">구매 완료!</strong>
               {pensionBuyResult.results.map((d, i) => (
                 <div key={i}>{d.round}회 · {d.group}조 {d.numbers.join('')}</div>
               ))}

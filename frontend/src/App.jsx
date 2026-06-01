@@ -95,6 +95,7 @@ const App = () => {
     <div className="max-w-[680px] mx-auto px-4 py-8">
       <header className="text-center mb-9">
         <span
+          aria-hidden="true"
           className="text-4xl block mb-2.5"
           style={{ filter: 'drop-shadow(0 0 12px rgba(232,168,32,0.5))' }}
         >🎱</span>
@@ -104,10 +105,7 @@ const App = () => {
         <p className="text-dim text-[13px] mt-1 tracking-wide">로또 6/45 & 연금복권 720+</p>
       </header>
 
-      <nav
-        className="flex border-b border-night mb-6"
-        style={{ background: 'radial-gradient(ellipse 80% 40% at 50% -10%, rgba(232,168,32,0.04) 0%, transparent 70%)' }}
-      >
+      <nav className="flex border-b border-night mb-6">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -148,8 +146,8 @@ const App = () => {
         />
       )}
 
-      <footer className="text-center pt-8 pb-4 text-muted text-[11px] leading-relaxed">
-        <p>⚠️ 복권은 완전한 확률 게임입니다. 재미로만 참고하세요!</p>
+      <footer className="text-center pt-5 pb-4 text-muted text-[11px] border-t border-night mt-2">
+        <p>복권은 확률 게임입니다 · 재미로만 참고하세요</p>
       </footer>
     </div>
   );
