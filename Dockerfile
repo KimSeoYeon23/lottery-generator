@@ -5,7 +5,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app/frontend
 
-COPY frontend/package.json ./
+COPY frontend/package.json frontend/pnpm-workspace.yaml ./
 RUN pnpm install
 
 COPY frontend/ .
