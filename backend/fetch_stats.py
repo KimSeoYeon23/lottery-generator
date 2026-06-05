@@ -15,6 +15,17 @@ import requests
 STATS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stats.json")
 API_URL = "https://www.dhlottery.co.kr/lt645/selectPstLt645Info.do?srchLtEpsd={}"
 PENSION_LIST_URL = "https://m.dhlottery.co.kr/pt720/selectPstPt720WnList.do"
+DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK_URL", "")
+
+
+def send_discord(message: str):
+    if not DISCORD_WEBHOOK:
+        print("Discord 웹훅 URL 없음 — 알림 스킵")
+        return
+    try:
+        requests.post(DISCORD_WEBHOOK, json={"content": message}, timeout=10)
+    except Exception as e:
+        print(f"Discord 알림 실패: {e}")
 
 
 def _get(session, round_no):
@@ -139,6 +150,11 @@ def run_pension():
         json.dump(stats, f)
 
     print(f"연금복권 통계 저장 완료: {STATS_PATH} (최신 {latest_pension}회)")
+    send_discord(
+        f"📊 **연금복권720+ 통계 갱신 완료**\n"
+        f"최신 회차: **{latest_pension}회**\n"
+        f"그룹 빈도 데이터 업데이트됨"
+    )
     return stats
 
 
@@ -177,6 +193,12 @@ def run():
         json.dump(stats, f)
 
     print(f"저장 완료: {STATS_PATH} (최신 {latest}회)")
+    send_discord(
+        f"📊 **로또 통계 갱신 완료**\n"
+        f"로또 최신 회차: **{latest}회**\n"
+        f"연금복권 최신 회차: **{latest_pension}회**\n"
+        f"전체 빈도 · 최근 50회 · 합계 범위 업데이트됨"
+    )
     return stats
 
 
@@ -188,4 +210,8 @@ def load():
 
 
 if __name__ == "__main__":
-    run()
+    import sys
+    if "--pension-only" in sys.argv:
+        run_pension()
+    else:
+        run()
