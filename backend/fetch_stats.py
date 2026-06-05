@@ -158,6 +158,44 @@ def run_pension():
     return stats
 
 
+def run_lotto():
+    session = requests.Session()
+    session.headers.update({"User-Agent": "Mozilla/5.0"})
+
+    print("최신 회차 탐색 중...")
+    latest = fetch_latest_round(session)
+    print(f"최신 회차: {latest}회")
+
+    if latest <= 1:
+        raise RuntimeError("최신 회차 탐색 실패")
+
+    print("전체 데이터 수집 중...")
+    freq, recent_50, sums = fetch_all_results(session, latest)
+
+    if not sums:
+        raise RuntimeError("수집된 데이터가 없습니다.")
+
+    sum_lo, sum_hi = calc_sum_range(sums)
+    stats = load() or {}
+    stats.update({
+        "latest_round": latest,
+        "lotto_freq": dict(freq),
+        "lotto_recent_50": dict(recent_50),
+        "lotto_sum_range": [sum_lo, sum_hi],
+    })
+
+    with open(STATS_PATH, "w") as f:
+        json.dump(stats, f)
+
+    print(f"로또 통계 저장 완료: {STATS_PATH} (최신 {latest}회)")
+    send_discord(
+        f"📊 **로또 6/45 통계 갱신 완료**\n"
+        f"최신 회차: **{latest}회**\n"
+        f"전체 빈도 · 최근 50회 · 합계 범위 업데이트됨"
+    )
+    return stats
+
+
 def run():
     session = requests.Session()
     session.headers.update({"User-Agent": "Mozilla/5.0"})
@@ -194,7 +232,7 @@ def run():
 
     print(f"저장 완료: {STATS_PATH} (최신 {latest}회)")
     send_discord(
-        f"📊 **로또 통계 갱신 완료**\n"
+        f"📊 **로또 + 연금복권 통계 갱신 완료**\n"
         f"로또 최신 회차: **{latest}회**\n"
         f"연금복권 최신 회차: **{latest_pension}회**\n"
         f"전체 빈도 · 최근 50회 · 합계 범위 업데이트됨"
@@ -213,5 +251,7 @@ if __name__ == "__main__":
     import sys
     if "--pension-only" in sys.argv:
         run_pension()
+    elif "--lotto-only" in sys.argv:
+        run_lotto()
     else:
         run()

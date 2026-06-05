@@ -7,6 +7,16 @@ on:
     # 매주 목요일 22:00 KST (= 13:00 UTC) — 연금복권 추첨(20:45) 후
     - cron: '0 13 * * 4'
   workflow_dispatch:
+    inputs:
+      target:
+        description: '갱신 대상'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - lotto
+          - pension
 
 permissions:
   contents: write
@@ -27,8 +37,12 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
-          if [ "${{ github.event.schedule }}" = "0 13 * * 4" ]; then
+          SCHEDULE="${{ github.event.schedule }}"
+          TARGET="${{ github.event.inputs.target }}"
+          if [ "$SCHEDULE" = "0 13 * * 4" ] || [ "$TARGET" = "pension" ]; then
             python backend/fetch_stats.py --pension-only
+          elif [ "$TARGET" = "lotto" ]; then
+            python backend/fetch_stats.py --lotto-only
           else
             python backend/fetch_stats.py
           fi
