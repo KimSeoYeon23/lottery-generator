@@ -2,8 +2,8 @@ name: Auto Buy Lottery
 
 on:
   schedule:
-    # 매주 토요일 19:00 KST (= 10:00 UTC) — 마감(20:00 KST) 1시간 전
-    - cron: '0 10 * * 6'
+    # 매주 토요일 15:00 KST (= 06:00 UTC) — 마감(20:00 KST) 5시간 전
+    - cron: '0 6 * * 6'
   workflow_dispatch:
     inputs:
       ticket_count:
