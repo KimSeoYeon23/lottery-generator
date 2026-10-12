@@ -226,7 +226,7 @@ class DhlotteryClient:
 
     def buy_pension(self, group, mock=False):
         """연금복권 720+ 자동 구매 (번호는 서버가 배정)
-        group: int (1~5, 희망 조 — 서버가 무시할 수 있음)
+        group: int (1~5, 희망 조 — 서버가 무시할 수 있음), None=모든조(같은 번호로 1~5조 5매)
         """
         import urllib.parse
 
@@ -234,7 +234,8 @@ class DhlotteryClient:
             self._init_pension_session()
             self._pension_session_ready = True
         rnd = self._pension_round()
-        sel_cls_no = str(group)
+        all_groups = group is None
+        sel_cls_no = "" if all_groups else str(group)
 
         headers = {
             "User-Agent": self._session.headers["User-Agent"],
@@ -262,15 +263,17 @@ class DhlotteryClient:
         # 1단계: makeAutoNo.do (서버가 번호 자동 배정)
         auto_payload = (
             f"ROUND={rnd}&round={rnd}&LT_EPSD={rnd}"
-            f"&SEL_NO=&BUY_CNT=1&AUTO_SEL_SET=SA"
+            f"&SEL_NO=&BUY_CNT={'' if all_groups else 1}&AUTO_SEL_SET=SA"
             f"&SEL_CLASS={sel_cls_no}&BUY_TYPE=A&ACCS_TYPE=01"
         )
         auto_res = post_enc(f"{self._EL}/makeAutoNo.do", auto_payload)
         if str(auto_res.get('resultCode', '')) != '100':
             raise RuntimeError(f"번호 생성 실패: {json.dumps(auto_res, ensure_ascii=False)}")
 
-        actual_lot_no = auto_res.get('selLotNo', '')
-        actual_cls_no = auto_res.get('sPReqClass', sel_cls_no)
+        actual_lot_no = str(auto_res.get('selLotNo', '')).split(',')[0].strip()
+        actual_cls_no = "" if all_groups else auto_res.get('sPReqClass', sel_cls_no)
+        if all_groups and not (len(actual_lot_no) == 6 and actual_lot_no.isdigit()):
+            raise RuntimeError(f"모든조 번호 형식 오류: {json.dumps(auto_res, ensure_ascii=False)}")
 
         # 2단계: 주문번호 발급
         import time
@@ -278,7 +281,7 @@ class DhlotteryClient:
         order_payload = (
             f"ROUND={rnd}&round={rnd}&LT_EPSD={rnd}"
             f"&AUTO_SEL_SET=SA&SEL_CLASS={actual_cls_no}&SEL_NO={actual_lot_no}"
-            f"&BUY_TYPE=A&BUY_CNT=1"
+            f"&BUY_TYPE={'M' if all_groups else 'A'}&BUY_CNT={5 if all_groups else 1}"
         )
         order_res = post_enc(f"{self._EL}/makeOrderNo.do", order_payload)
         order_no   = order_res.get('orderNo', '')
@@ -290,17 +293,25 @@ class DhlotteryClient:
 
         # 3단계: 실제 구매
         time.sleep(0.3)
-        buy_no = f"1{actual_cls_no}{actual_lot_no}"
+        # 모든조 결제 폼은 techinpark/lottery-bot, hwajin-me/home-assistant-korea-components 구현과 동일
+        if all_groups:
+            buy_no = "%2C".join(f"{g}{actual_lot_no}" for g in range(1, 6))
+            cnt, set_type, buy_type, buytype = 5, "SA", "A", "M"
+            classnum = selnum = ""
+        else:
+            buy_no = f"1{actual_cls_no}{actual_lot_no}"
+            cnt, set_type, buy_type, buytype = 1, "A", "A", "A"
+            classnum, selnum = actual_cls_no, actual_lot_no
         conn_payload = (
-            f"ROUND={rnd}&FLAG=&BUY_KIND=01&BUY_NO={buy_no}&BUY_CNT=1"
-            f"&BUY_SET_TYPE=A&BUY_TYPE=A&CS_TYPE=01"
+            f"ROUND={rnd}&FLAG=&BUY_KIND=01&BUY_NO={buy_no}&BUY_CNT={cnt}"
+            f"&BUY_SET_TYPE={'%2C'.join([set_type] * cnt)}&BUY_TYPE={'%2C'.join([buy_type] * cnt)}&CS_TYPE=01"
             f"&orderNo={urllib.parse.quote(order_no)}&orderDate={urllib.parse.quote(order_date)}"
             f"&TRANSACTION_ID=&WIN_DATE=&USER_ID={self._uid}&PAY_TYPE=01"
             f"&resultErrorCode=&resultErrorMsg=&resultOrderNo="
             f"&WORKING_FLAG=true&NUM_CHANGE_TYPE=&auto_process=N"
-            f"&set_type=A&classnum={actual_cls_no}&selnum={actual_lot_no}&buytype=A"
+            f"&set_type={set_type}&classnum={classnum}&selnum={selnum}&buytype={buytype}"
             f"&num1=&num2=&num3=&num4=&num5=&num6="
-            f"&DSEC=0&CLOSE_DATE=&verifyYN=N&curdeposit=&curpay=1000"
+            f"&DSEC=0&CLOSE_DATE=&verifyYN=N&curdeposit=&curpay={1000 * cnt}"
             f"&DROUND={rnd}&lotto720_radio_group=on"
         )
         conn_resp = self._session.post(
@@ -325,7 +336,7 @@ class DhlotteryClient:
 
         return {
             "round": int(rnd),
-            "group": int(actual_cls_no),
+            "group": "모든조" if all_groups else int(actual_cls_no),
             "numbers": [int(d) for d in str(actual_lot_no)],
         }
 

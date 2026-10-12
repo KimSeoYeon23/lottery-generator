@@ -1,4 +1,4 @@
-"""매주 토요일 자동 로또 구매 + Discord 알림
+"""매주 목요일 자동 로또 + 연금복권 720+ 모든조 구매 + Discord 알림
 
 GitHub Actions에서 실행. 환경변수:
   LOTTERY_USERNAME   동행복권 아이디
@@ -17,6 +17,7 @@ USERNAME = os.environ.get("LOTTERY_USERNAME", "")
 PASSWORD = os.environ.get("LOTTERY_PASSWORD", "")
 DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK_URL", "")
 TICKET_COUNT = int(os.environ.get("TICKET_COUNT", "5"))
+PENSION_COST = 5000  # 연금복권 모든조 = 1~5조 같은 번호 5매
 
 
 def send_discord(message: str):
@@ -49,7 +50,7 @@ def main():
         # 잔액 확인
         balance = c.get_balance()
         available = balance["available"]
-        needed = TICKET_COUNT * 1000
+        needed = TICKET_COUNT * 1000 + PENSION_COST
         if available < needed:
             send_discord(
                 f"⚠️ **로또 자동구매 취소 — 잔액 부족**\n"
@@ -85,6 +86,26 @@ def main():
     lines.append(f"💰 구매 후 잔액: **{remaining:,}원**")
 
     msg = "\n".join(lines)
+    send_discord(msg)
+    print(msg)
+
+    # 연금복권 720+ 모든조 — 로또 결과와 별도로 알림
+    try:
+        p = c.buy_pension(None)
+        remaining = c.get_balance()["available"]
+    except Exception as e:
+        send_discord(f"❌ **연금복권 자동구매 실패**\n```{e}```")
+        print(f"연금복권 오류: {e}")
+        sys.exit(1)
+
+    digits = "".join(str(d) for d in p["numbers"])
+    msg = (
+        f"🎟️ **연금복권 720+ 자동구매 완료**\n\n"
+        f"📅 **{p['round']}회**\n"
+        f"🔢 1~5조 **{digits}** (모든조)\n\n"
+        f"💳 5매 × 1,000원 = **{PENSION_COST:,}원**\n"
+        f"💰 구매 후 잔액: **{remaining:,}원**"
+    )
     send_discord(msg)
     print(msg)
 
